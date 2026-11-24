@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catálogo de ropa de segunda mano</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Karla:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --tinta:#17233B;
+    --papel:#F4F6FA;
+    --blanco:#FFFFFF;
+    --etiqueta:#FFD84D;
+    --denim:#2F5DA8;
+    --linea:#D6DDEA;
+    --vendida:#7C869B;
+    --wa:#147A3D;
+    --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+    --texto:"Karla",system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--papel);color:var(--tinta);font:400 1rem/1.5 var(--texto)}
+  img{max-width:100%}
+  button{font:inherit;color:inherit}
+  :focus-visible{outline:3px solid var(--denim);outline-offset:2px}
+
+  /* ---------- Barra superior ---------- */
+  .barra{position:sticky;top:0;z-index:20;background:rgba(244,246,250,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--linea)}
+  .barra-in{max-width:1120px;margin:0 auto;padding:.75rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+  .marca{font:700 1.35rem/1 var(--display);letter-spacing:-.02em;color:var(--tinta);text-decoration:none}
+  .acciones{display:flex;align-items:center;gap:.6rem}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.6rem 1.1rem;border:2px solid var(--tinta);border-radius:999px;background:transparent;font-weight:700;text-decoration:none;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+  .btn svg{width:1.15em;height:1.15em;flex:none}
+  .btn-borde:hover{background:var(--tinta);color:var(--blanco)}
+  .btn-lleno{background:var(--tinta);color:var(--blanco)}
+  .btn-lleno:hover{background:var(--denim);border-color:var(--denim)}
+  .btn-lleno.quitar{background:transparent;color:var(--tinta)}
+  .btn-lleno.quitar:hover{background:var(--linea);border-color:var(--tinta)}
+  .btn-wa{background:var(--wa);border-color:var(--wa);color:var(--blanco);width:100%;padding:.85rem 1rem;font-size:1.05rem}
+  .btn-wa:hover{filter:brightness(1.1)}
+  .btn[disabled],.btn[aria-disabled="true"]{opacity:.45;pointer-events:none}
+  .ig-corto{display:none}
+  .btn-carrito{position:relative;display:grid;place-items:center;width:2.75rem;height:2.75rem;border:2px solid var(--tinta);border-radius:50%;background:var(--tinta);color:var(--blanco);cursor:pointer}
+  .btn-carrito svg{width:1.3rem;height:1.3rem}
+  .btn-carrito:hover{background:var(--denim);border-color:var(--denim)}
+  #contador{position:absolute;top:-.4rem;right:-.4rem;min-width:1.35rem;height:1.35rem;padding:0 .25rem;border-radius:999px;background:var(--etiqueta);color:var(--tinta);font:700 .8rem/1.35rem var(--texto);text-align:center}
+  #contador[data-n="0"]{display:none}
+
+  /* ---------- Portada y controles ---------- */
+  main{max-width:1120px;margin:0 auto;padding:0 1.25rem}
+  .portada{padding:3rem 0 1.5rem}
+  .portada h1{margin:0 0 .9rem;max-width:18ch;font:700 clamp(2.2rem,6vw,3.7rem)/1.02 var(--display);letter-spacing:-.03em}
+  .portada p{margin:0;max-width:52ch;font-size:1.1rem}
+  .controles{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.75rem 1rem;padding:1rem 0 1.25rem}
+  .chips{display:flex;flex-wrap:wrap;gap:.5rem}
+  .chip{padding:.4rem .95rem;border:1.5px solid var(--tinta);border-radius:999px;background:transparent;font-weight:500;cursor:pointer}
+  .chip[aria-pressed="true"]{background:var(--tinta);color:var(--blanco)}
+  .orden{display:flex;align-items:center;gap:.6rem;font-size:.95rem}
+  .orden select{padding:.4rem .6rem;border:1.5px solid var(--tinta);border-radius:6px;background:var(--blanco);font:inherit;color:inherit}
+  #cuenta{margin:0 0 1rem;color:#4A5876;font-size:.95rem}
+
+  /* ---------- Catálogo ---------- */
+  .rejilla{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:2rem 1.4rem;padding-bottom:4rem}
+  .prenda{display:flex;flex-direction:column}
+  .prenda-img{position:relative;display:block;width:100%;aspect-ratio:4/5;padding:0;border:0;border-radius:6px;overflow:hidden;background:var(--linea);cursor:pointer}
+  .foto{display:block;width:100%;height:100%;object-fit:cover;transition:transform .3s}
+  .prenda-img:hover .foto{transform:scale(1.03)}
+  .marcador{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6rem;background:var(--c,#DCE3EF)}
+  .marcador svg{width:55%;fill:rgba(255,255,255,.6)}
+  .marcador span{font-size:.8rem;color:var(--tinta)}
+
+  /* La etiqueta de precio: la pieza distintiva de la página */
+  .etiqueta{position:absolute;left:0;bottom:14px;padding:.4rem .95rem .4rem 1.75rem;background:radial-gradient(circle at 15px 50%,var(--papel) 0 3px,transparent 3.5px),var(--etiqueta);color:var(--tinta);font:700 1.1rem/1.2 var(--display);clip-path:polygon(12px 0,100% 0,100% 100%,12px 100%,0 50%)}
+  .vendida .foto{filter:grayscale(1);opacity:.5}
+  .vendida .etiqueta{background:radial-gradient(circle at 15px 50%,var(--papel) 0 3px,transparent 3.5px),var(--vendida);color:var(--blanco)}
+
+  .prenda-info{display:flex;flex-direction:column;gap:.15rem;padding-top:.75rem}
+  .prenda-info h3{margin:0;font:600 1.1rem/1.25 var(--display);letter-spacing:-.01em}
+  .prenda-info p{margin:0 0 .6rem;color:#4A5876;font-size:.95rem}
+  .prenda-info .btn{padding:.5rem 1rem;font-size:.95rem}
+
+  /* ---------- Carrito ---------- */
+  .velo{position:fixed;inset:0;z-index:30;background:rgba(23,35,59,.45);opacity:0;visibility:hidden;transition:opacity .25s,visibility 0s .25s}
+  .velo.visible{opacity:1;visibility:visible;transition:opacity .25s}
+  .carrito{position:fixed;top:0;right:0;z-index:40;display:flex;flex-direction:column;width:min(420px,100%);height:100%;background:var(--blanco);box-shadow:-8px 0 30px rgba(23,35,59,.2);transform:translateX(100%);visibility:hidden;transition:transform .28s ease,visibility 0s .28s}
+  .carrito.abierto{transform:none;visibility:visible;transition:transform .28s ease}
+  .carrito header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--linea)}
+  .carrito h2{margin:0;font:700 1.35rem/1 var(--display);letter-spacing:-.02em}
+  .cerrar{width:2.4rem;height:2.4rem;border:0;border-radius:50%;background:transparent;font-size:1.6rem;line-height:1;cursor:pointer}
+  .cerrar:hover{background:var(--papel)}
+  #lista-carrito{flex:1;margin:0;padding:.5rem 1.25rem;list-style:none;overflow-y:auto}
+  .linea{display:grid;grid-template-columns:56px 1fr auto;gap:.85rem;align-items:center;padding:.85rem 0;border-bottom:1px solid var(--linea)}
+  .mini{width:56px;height:70px;border-radius:4px;overflow:hidden;background:var(--linea)}
+  .mini .marcador span{display:none}
+  .linea strong{display:block;font-weight:700;line-height:1.25}
+  .linea span{color:#4A5876;font-size:.9rem}
+  .linea-precio{display:flex;flex-direction:column;align-items:flex-end;gap:.2rem;font-weight:700}
+  .quitar-x{padding:0;border:0;background:none;color:var(--denim);font-size:.85rem;text-decoration:underline;cursor:pointer}
+  .vacio{padding:2rem 0;color:#4A5876}
+  .carrito footer{padding:1rem 1.25rem 1.25rem;border-top:1px solid var(--linea);background:var(--papel)}
+  .total{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.9rem;font:700 1.3rem/1 var(--display)}
+  .nota{margin:.75rem 0 0;font-size:.85rem;color:#4A5876}
+  .vaciar{margin-top:.5rem;padding:0;border:0;background:none;color:var(--denim);font-size:.9rem;text-decoration:underline;cursor:pointer}
+
+  /* ---------- Detalle de prenda ---------- */
+  dialog{width:100%;max-width:min(780px,calc(100% - 24px));padding:0;border:0;border-radius:8px;background:var(--blanco);color:var(--tinta)}
+  dialog::backdrop{background:rgba(23,35,59,.5)}
+  .detalle{position:relative;display:grid;gap:1.25rem;padding:1.25rem}
+  .detalle-foto{aspect-ratio:4/5;border-radius:6px;overflow:hidden;background:var(--linea)}
+  .detalle-texto h2{margin:.25rem 0 .4rem;font:700 1.7rem/1.1 var(--display);letter-spacing:-.02em}
+  .detalle-precio{margin:0 0 .75rem;font:700 1.4rem/1 var(--display)}
+  .detalle-texto p{margin:0 0 .75rem}
+  .detalle .cerrar{position:absolute;top:.5rem;right:.5rem;background:var(--blanco)}
+  @media (min-width:640px){ .detalle{grid-template-columns:1fr 1fr;align-items:start} }
+
+  /* ---------- Pie ---------- */
+  footer.pie{border-top:1px solid var(--linea);background:var(--blanco)}
+  .pie-in{max-width:1120px;margin:0 auto;padding:1.5rem 1.25rem;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem}
+  .pie p{margin:0}
+
+  @media (max-width:560px){
+    .barra-in{padding:.6rem .9rem}
+    .ig-largo{display:none}
+    .ig-corto{display:inline}
+    .portada{padding-top:2rem}
+    main{padding:0 .9rem}
+    .rejilla{grid-template-columns:repeat(2,1fr);gap:1.5rem .75rem}
+    .etiqueta{font-size:1rem;padding-left:1.6rem}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{transition:none!important;scroll-behavior:auto!important}
+  }
+</style>
+</head>
+<body>
+
+<!--
+  ============================================================
+  CÓMO EDITAR ESTA PÁGINA
+  Todo lo que necesitas cambiar está en el bloque <script> de
+  abajo, en dos secciones:
+    1) CONFIG  -> nombre de tu tienda, WhatsApp e Instagram
+    2) PRENDAS -> tu ropa (nombre, precio, talla, foto...)
+  No hace falta tocar nada más.
+  ============================================================
+-->
+
+<header class="barra">
+  <div class="barra-in">
+    <a class="marca" href="#" id="marca">Mi tienda</a>
+    <div class="acciones">
+      <a class="btn btn-borde" id="btn-instagram" href="#" target="_blank" rel="noopener" aria-label="Seguir en Instagram">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1" fill="currentColor" stroke="none"/></svg>
+        <span class="ig-largo">Seguir en Instagram</span><span class="ig-corto">Seguir</span>
+      </a>
+      <button class="btn-carrito" id="abrir-carrito" aria-label="Abrir carrito">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 12H6.2L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+        <span id="contador" data-n="0">0</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="portada">
+    <h1>Ropa de segunda mano. Cada prenda es única.</h1>
+    <p>Elige lo que te guste, arma tu carrito y mándanos el pedido por WhatsApp. Te confirmamos disponibilidad y forma de entrega.</p>
+  </section>
+
+  <section class="controles" aria-label="Filtros">
+    <div class="chips" id="chips"></div>
+    <label class="orden">Ordenar
+      <select id="orden">
+        <option value="novedades">Novedades</option>
+        <option value="menor">Precio: menor a mayor</option>
+        <option value="mayor">Precio: mayor a menor</option>
+      </select>
+    </label>
+  </section>
+
+  <p id="cuenta" aria-live="polite"></p>
+  <section class="rejilla" id="catalogo"></section>
+</main>
+
+<footer class="pie">
+  <div class="pie-in">
+    <p id="pie-texto">Mira las prendas nuevas en nuestro Instagram.</p>
+    <a class="btn btn-borde" id="btn-instagram-pie" href="#" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1" fill="currentColor" stroke="none"/></svg>
+      Seguir en Instagram
+    </a>
+  </div>
+</footer>
+
+<!-- Ventana con el detalle de una prenda -->
+<dialog id="detalle" aria-label="Detalle de la prenda">
+  <div class="detalle" id="detalle-contenido"></div>
+</dialog>
+
+<!-- Carrito -->
+<div class="velo" id="velo"></div>
+<aside class="carrito" id="carrito" aria-label="Carrito de compras">
+  <header>
+    <h2>Tu carrito</h2>
+    <button class="cerrar" id="cerrar-carrito" aria-label="Cerrar carrito">&times;</button>
+  </header>
+  <ul id="lista-carrito"></ul>
+  <footer>
+    <div class="total"><span>Total</span><span id="total">$0</span></div>
+    <a class="btn btn-wa" id="enviar" target="_blank" rel="noopener" aria-disabled="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 11.5a8.5 8.5 0 0 1-12.6 7.4L3.5 20l1.2-4.2A8.5 8.5 0 1 1 20.5 11.5Z"/><path d="M9 8.8c.3 2.6 2.7 5 5.3 5.4l1.2-1.4-2-1-.9.7c-.9-.4-1.7-1.2-2.1-2.1l.7-.9-1-2L9 8.8Z" fill="currentColor" stroke="none"/></svg>
+      Enviar pedido por WhatsApp
+    </a>
+    <p class="nota">No se cobra aquí: se abre WhatsApp con tu pedido ya escrito y lo confirmamos por mensaje.</p>
+    <button class="vaciar" id="vaciar" type="button">Vaciar carrito</button>
+  </footer>
+</aside>
+
+<script>
+/* =====================================================================
+   1) CONFIGURACIÓN: cambia estos datos por los de tu tienda
+   ===================================================================== */
+const CONFIG = {
+  nombreTienda: "Bazar Segundo Chance",   // Aparece arriba a la izquierda
+  whatsapp: "525544423750",            // Tu número: 52 + 10 dígitos, sin +, sin espacios ni guiones
+  instagram: "bbazarsegundo_chance",             // Tu usuario de Instagram, sin @
+  moneda: "$",                         // Símbolo que se muestra junto al precio
+  saludo: "¡Hola! Me interesan estas prendas de tu catálogo:",
+  despedida: "¿Siguen disponibles?"
+};
+
+/* =====================================================================
+   2) TUS PRENDAS: una por bloque { ... }
+   - id:        número único (no repitas ninguno)
+   - nombre:    cómo se llama la prenda
+   - precio:    solo el número, sin símbolo (ej. 250)
+   - talla:     "S", "M", "28", "Única", etc.
+   - categoria: agrupa las prendas en los botones de filtro
+   - estado:    "Como nueva", "Buen estado", etc.
+   - detalle:   texto extra al abrir la prenda (medidas, defectos...)
+   - imagen:    ruta de tu foto, ej. "fotos/chamarra.jpg" (déjala vacía "" si aún no tienes foto)
+   - color:     color del recuadro de ejemplo cuando no hay foto
+   - vendida:   true si ya se vendió (se ve gris y no se puede agregar)
+   Las prendas nuevas ponlas arriba: así aparecen primero.
+   ===================================================================== */
+const PRENDAS = [
+  { id: 15, nombre: "Chamarra Verde", precio: 80, talla: "S-M", categoria: "Chamarras", estado: "Buen estado",
+    detalle: "Chamarra color verde para frio.", imagen: "fotos/IMG_4687.jpeg", color: "#B9C9E4" },
+  { id: 14, nombre: "Vestido Buchon", precio: 50, talla: "S-M", categoria: "Vestidos", estado: "Buen estado",
+    detalle: "Vestido estilo buchon, vestido corto.", imagen: "fotos/IMG_4691.jpeg", color: "#B9C9E4" },
+  { id: 13, nombre: "Vestido Negro", precio: 60, talla: "L", categoria: "Vestidos", estado: "Buen estado",
+    detalle: "Vestido negro con abertura a media altura de ambos lados.", imagen: "fotos/IMG_4693.jpeg", color: "#B9C9E4" },
+  { id: 12, nombre: "Blusa Animal Print", precio: 40, talla: "L-XL", categoria: "Blusas", estado: "Buen estado",
+    detalle: "Blusa con cuello Halter, descubierta de la espalda.", imagen: "fotos/IMG_2990.jpeg", color: "#B9C9E4" },
+  { id: 11, nombre: "Blazer Animal Print", precio: 100, talla: "M", categoria: "Abrigos", estado: "Buen estado",
+    detalle: "Blazer de poco uso.", imagen: "fotos/IMG_4662.jpeg", color: "#F2D3D8" },
+  { id: 10, nombre: "Falda y Crop Top", precio: 100, talla: "L", categoria: "Faldas", estado: "Buen estado",
+    detalle: "Falda con abertura en la pierna y Crop Top de H&M.", imagen: "fotos/IMG_4666.jpeg", color: "#D9DDE3" },
+  { id: 9, nombre: "Falda Tableada", precio: 40, talla: "Xs-S", categoria: "Faldas", estado: "Aceptable",
+    detalle: "Falda tableada midi, con unas pequeñas manchas.LA BOLSA NO ESTA A LA VENTA", imagen: "fotos/IMG_4667.jpeg", color: "#9FB6DA" },
+  { id: 8, nombre: "Chamarra Corta", precio: 50, talla: "M-L", categoria: "Chamarras", estado: "Aceptable",
+    detalle: "Chamarra corta, con pequeños detalles.", imagen: "fotos/IMG_4669.jpeg", color: "#E7C9A9" },
+  { id: 7, nombre: "Gabardina", precio: 250, talla: "S-M", categoria: "Chamarras", estado: "Nuevo",
+    detalle: "Gabardina con solo 1 puesta.", imagen: "fotos/IMG_4671.jpeg", color: "#C4C9D4" },
+  { id: 6, nombre: "Sueter basico", precio: 60, talla: "M", categoria: "Sueter", estado: "Buen estado",
+    detalle: "Sueter color verde caliente.", imagen: "fotos/IMG_4679.jpeg", color: "#BFDCC8" },
+  { id: 5, nombre: "Chamarra Cuero", precio: 30, talla: "S", categoria: "Chamarras", estado: "Deteriorada",
+    detalle: "Chamarra negra de cuero por la parte de atras tiene detalles de desgaste.", imagen: "fotos/IMG_4682.jpeg", color: "#C7D6EE" },
+  { id: 4, nombre: "Vestido de Corazones", precio: 80, talla: "M", categoria: "Vestidos", estado: "Como Nuevo",
+    detalle: "Vestido con diseño de corazones, esta casi nuevo y en perfectas condiciones.", imagen: "fotos/IMG_4685.jpeg", color: "#E9D6A3" },
+  { id: 3, nombre: "Vestido Floral", precio: 55, talla: "S-M", categoria: "Vestidos", estado: "Como nuevo",
+    detalle: "Vestido corto con estilo de flores. ", imagen: "fotos/IMG_4700.jpeg", color: "#E3D3BF" },
+  { id: 2, nombre: "Vestido Rosa", precio: 65, talla: "L", categoria: "Vestidos", estado: "Buen estado",
+    detalle: "Vestido rosa 3/4.", imagen: "fotos/IMG_4704.jpeg", color: "#CBD2B8"},
+  { id: 1, nombre: "Vestido Naranja", precio: 100, talla: "M", categoria: "Vestidos", estado: "Como nuevo",
+    detalle: "Algodón grueso, cuello redondo.", imagen: "fotos/IMG_2987.jpeg", color: "#E8ECF3" }
+];
+
+/* =====================================================================
+   A partir de aquí es el funcionamiento de la página.
+   No necesitas modificar nada.
+   ===================================================================== */
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const precio = n => CONFIG.moneda + Number(n).toLocaleString("es-MX");
+const porId = id => PRENDAS.find(p => String(p.id) === String(id));
+const CLAVE = "carrito-catalogo-ropa";
+
+let carrito = cargar();
+let categoria = "Todas";
+let orden = "novedades";
+
+function cargar() {
+  try {
+    const guardado = JSON.parse(localStorage.getItem(CLAVE) || "[]");
+    return guardado.map(String).filter(id => { const p = porId(id); return p && !p.vendida; });
+  } catch (e) { return []; }
+}
+function guardar() {
+  try { localStorage.setItem(CLAVE, JSON.stringify(carrito)); } catch (e) {}
+}
+const enCarrito = id => carrito.includes(String(id));
+
+/* ---------- Fotos ---------- */
+function marcador(p) {
+  return `<div class="foto marcador" style="--c:${esc(p.color || "#DCE3EF")}" role="img" aria-label="${esc(p.nombre)}">
+    <svg viewBox="0 0 200 240" aria-hidden="true"><path d="M62 38 20 68l24 38 20-12v118h72V94l20 12 24-38-42-30c-8 14-22 22-38 22s-30-8-38-22Z"/></svg>
+    <span>Foto de ejemplo</span></div>`;
+}
+function foto(p) {
+  if (!p.imagen) return marcador(p);
+  return `<img class="foto" src="${esc(p.imagen)}" alt="${esc(p.nombre)}" data-id="${esc(p.id)}" loading="lazy">`;
+}
+// Si una foto no se encuentra, se muestra el recuadro de ejemplo en su lugar
+document.addEventListener("error", e => {
+  const t = e.target;
+  if (t.tagName === "IMG" && t.classList.contains("foto")) {
+    const p = porId(t.dataset.id);
+    if (p) t.outerHTML = marcador(p);
+  }
+}, true);
+
+/* ---------- Catálogo ---------- */
+function pintarChips() {
+  const cats = ["Todas", ...new Set(PRENDAS.map(p => p.categoria))];
+  $("#chips").innerHTML = cats.map(c =>
+    `<button class="chip" data-cat="${esc(c)}" aria-pressed="${c === categoria}">${esc(c)}</button>`).join("");
+}
+function lista() {
+  let l = PRENDAS.filter(p => categoria === "Todas" || p.categoria === categoria);
+  if (orden === "menor") l = [...l].sort((a, b) => a.precio - b.precio);
+  if (orden === "mayor") l = [...l].sort((a, b) => b.precio - a.precio);
+  return l;
+}
+function pintarCatalogo() {
+  const l = lista();
+  $("#cuenta").textContent = `${l.length} ${l.length === 1 ? "prenda" : "prendas"}`;
+  $("#catalogo").innerHTML = l.map(p => `
+    <article class="prenda ${p.vendida ? "vendida" : ""}">
+      <button class="prenda-img" data-ver="${esc(p.id)}" aria-label="Ver detalles de ${esc(p.nombre)}">
+        ${foto(p)}
+        <span class="etiqueta">${p.vendida ? "Vendida" : precio(p.precio)}</span>
+      </button>
+      <div class="prenda-info">
+        <h3>${esc(p.nombre)}</h3>
+        <p>Talla ${esc(p.talla)}, ${esc(p.estado)}</p>
+        <button class="btn btn-lleno" data-agregar="${esc(p.id)}" ${p.vendida ? "disabled" : ""}></button>
+      </div>
+    </article>`).join("");
+  actualizarBotones();
+}
+function actualizarBotones() {
+  document.querySelectorAll("[data-agregar]").forEach(b => {
+    const p = porId(b.dataset.agregar);
+    const dentro = enCarrito(b.dataset.agregar);
+    b.textContent = p && p.vendida ? "Vendida" : dentro ? "Quitar del carrito" : "Agregar al carrito";
+    b.classList.toggle("quitar", dentro);
+  });
+}
+
+/* ---------- Carrito ---------- */
+function alternar(id) {
+  id = String(id);
+  const p = porId(id);
+  if (!p || p.vendida) return;
+  carrito = enCarrito(id) ? carrito.filter(x => x !== id) : [...carrito, id];
+  guardar();
+  pintarCarrito();
+  actualizarBotones();
+}
+function enlaceWhatsApp(items, total) {
+  const lineas = items.map(p => `• ${p.nombre} (talla ${p.talla}) - ${precio(p.precio)}`);
+  const mensaje = [CONFIG.saludo, "", ...lineas, "", `Total: ${precio(total)}`, "", CONFIG.despedida].join("\n");
+  return `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(mensaje)}`;
+}
+function pintarCarrito() {
+  const items = carrito.map(porId).filter(Boolean);
+  const total = items.reduce((s, p) => s + Number(p.precio), 0);
+  const contador = $("#contador");
+  contador.textContent = items.length;
+  contador.dataset.n = items.length;
+
+  $("#lista-carrito").innerHTML = items.length
+    ? items.map(p => `
+        <li class="linea">
+          <div class="mini">${foto(p)}</div>
+          <div><strong>${esc(p.nombre)}</strong><span>Talla ${esc(p.talla)}</span></div>
+          <div class="linea-precio">${precio(p.precio)}
+            <button class="quitar-x" data-quitar="${esc(p.id)}" aria-label="Quitar ${esc(p.nombre)} del carrito">Quitar</button>
+          </div>
+        </li>`).join("")
+    : `<li class="vacio">Tu carrito está vacío. Agrega prendas del catálogo y las apartamos por WhatsApp.</li>`;
+
+  $("#total").textContent = precio(total);
+  $("#vaciar").style.display = items.length ? "" : "none";
+  const enviar = $("#enviar");
+  if (items.length) {
+    enviar.href = enlaceWhatsApp(items, total);
+    enviar.removeAttribute("aria-disabled");
+  } else {
+    enviar.removeAttribute("href");
+    enviar.setAttribute("aria-disabled", "true");
+  }
+}
+function abrirCarrito() {
+  $("#carrito").classList.add("abierto");
+  $("#velo").classList.add("visible");
+  document.body.style.overflow = "hidden";
+  $("#cerrar-carrito").focus();
+}
+function cerrarCarrito() {
+  $("#carrito").classList.remove("abierto");
+  $("#velo").classList.remove("visible");
+  document.body.style.overflow = "";
+  $("#abrir-carrito").focus();
+}
+
+/* ---------- Detalle de prenda ---------- */
+function abrirDetalle(id) {
+  const p = porId(id);
+  if (!p) return;
+  $("#detalle-contenido").innerHTML = `
+    <button class="cerrar" data-cerrar-detalle aria-label="Cerrar">&times;</button>
+    <div class="detalle-foto">${foto(p)}</div>
+    <div class="detalle-texto">
+      <h2>${esc(p.nombre)}</h2>
+      <p class="detalle-precio">${p.vendida ? "Vendida" : precio(p.precio)}</p>
+      <p>Talla ${esc(p.talla)}. ${esc(p.estado)}.</p>
+      ${p.detalle ? `<p>${esc(p.detalle)}</p>` : ""}
+      <button class="btn btn-lleno" data-agregar="${esc(p.id)}" ${p.vendida ? "disabled" : ""}></button>
+    </div>`;
+  actualizarBotones();
+  $("#detalle").showModal();
+}
+
+/* ---------- Eventos ---------- */
+document.addEventListener("click", e => {
+  const agregar = e.target.closest("[data-agregar]");
+  if (agregar) {
+    alternar(agregar.dataset.agregar);
+    if (agregar.closest("dialog")) $("#detalle").close();
+    return;
+  }
+  const ver = e.target.closest("[data-ver]");
+  if (ver) return abrirDetalle(ver.dataset.ver);
+  const quitar = e.target.closest("[data-quitar]");
+  if (quitar) return alternar(quitar.dataset.quitar);
+  if (e.target.closest("[data-cerrar-detalle]")) return $("#detalle").close();
+  const cat = e.target.closest("[data-cat]");
+  if (cat) {
+    categoria = cat.dataset.cat;
+    document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", c.dataset.cat === categoria));
+    pintarCatalogo();
+  }
+});
+$("#orden").addEventListener("change", e => { orden = e.target.value; pintarCatalogo(); });
+$("#abrir-carrito").addEventListener("click", abrirCarrito);
+$("#cerrar-carrito").addEventListener("click", cerrarCarrito);
+$("#velo").addEventListener("click", cerrarCarrito);
+$("#vaciar").addEventListener("click", () => { carrito = []; guardar(); pintarCarrito(); actualizarBotones(); });
+$("#enviar").addEventListener("click", e => { if (!carrito.length) e.preventDefault(); });
+$("#detalle").addEventListener("click", e => { if (e.target === $("#detalle")) $("#detalle").close(); });
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && $("#carrito").classList.contains("abierto")) cerrarCarrito();
+});
+
+/* ---------- Inicio ---------- */
+document.title = CONFIG.nombreTienda + " | Ropa de segunda mano";
+$("#marca").textContent = CONFIG.nombreTienda;
+const urlInstagram = `https://instagram.com/${CONFIG.instagram}`;
+$("#btn-instagram").href = urlInstagram;
+$("#btn-instagram-pie").href = urlInstagram;
+pintarChips();
+pintarCatalogo();
+pintarCarrito();
+</script>
+</body>
+</html>
